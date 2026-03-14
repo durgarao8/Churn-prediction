@@ -167,6 +167,37 @@ except FileNotFoundError:
 
 
 # ─────────────────────────────────────────────
+#  TRAINING COLUMNS  (defined here so sidebar can reference it)
+# ─────────────────────────────────────────────
+# These are the EXACT column names the scaler was fitted on.
+# They match what pd.get_dummies() produces on the Telco dataset
+# (all dummies kept — default behaviour, no drop_first).
+TRAINING_COLUMNS = [
+    # ── numeric ──────────────────────────────
+    "tenure",
+    "MonthlyCharges",
+    "TotalCharges",
+    # ── binary ───────────────────────────────
+    "SeniorCitizen",        # 0 / 1
+    "Partner_Yes",          # 1 if Yes
+    "Dependents_Yes",       # 1 if Yes
+    # ── Contract (one-hot, 3 categories) ─────
+    "Contract_Month-to-month",
+    "Contract_One year",
+    "Contract_Two year",
+    # ── InternetService (one-hot, 3 cats) ────
+    "InternetService_DSL",
+    "InternetService_Fiber optic",
+    "InternetService_No",
+    # ── PaymentMethod (one-hot, 4 cats) ──────
+    "PaymentMethod_Bank transfer (automatic)",
+    "PaymentMethod_Credit card (automatic)",
+    "PaymentMethod_Electronic check",
+    "PaymentMethod_Mailed check",
+]
+
+
+# ─────────────────────────────────────────────
 #  SIDEBAR
 # ─────────────────────────────────────────────
 with st.sidebar:
@@ -294,35 +325,6 @@ st.markdown('</div>', unsafe_allow_html=True)
 # ─────────────────────────────────────────────
 #  ENCODE INPUTS  →  DataFrame  (matches training schema)
 # ─────────────────────────────────────────────
-
-# These are the EXACT column names the scaler was fitted on.
-# They are produced by pd.get_dummies() on the Telco dataset
-# after dropping the first dummy (drop_first=True is NOT used here —
-# all dummies are kept, which is the default pd.get_dummies behaviour).
-TRAINING_COLUMNS = [
-    # ── numeric ──────────────────────────────
-    "tenure",
-    "MonthlyCharges",
-    "TotalCharges",
-    # ── binary ───────────────────────────────
-    "SeniorCitizen",        # 0 / 1
-    "Partner_Yes",          # 1 if Yes
-    "Dependents_Yes",       # 1 if Yes
-    # ── Contract (one-hot, 3 categories) ─────
-    "Contract_Month-to-month",
-    "Contract_One year",
-    "Contract_Two year",
-    # ── InternetService (one-hot, 3 cats) ────
-    "InternetService_DSL",
-    "InternetService_Fiber optic",
-    "InternetService_No",
-    # ── PaymentMethod (one-hot, 4 cats) ──────
-    "PaymentMethod_Bank transfer (automatic)",
-    "PaymentMethod_Credit card (automatic)",
-    "PaymentMethod_Electronic check",
-    "PaymentMethod_Mailed check",
-]
-
 def encode_inputs(
     tenure, monthly_charges, total_charges,
     contract, internet_service, payment_method,
