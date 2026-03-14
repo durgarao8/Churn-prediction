@@ -2,16 +2,80 @@ import streamlit as st
 import numpy as np
 import pickle
 
-st.set_page_config(page_title="Churn Prediction", layout="wide")
+# ---------------------------
+# Page Config
+# ---------------------------
+st.set_page_config(
+    page_title="Customer Churn Prediction",
+    page_icon="📊",
+    layout="wide"
+)
 
-# Load model
+# ---------------------------
+# Custom CSS Styling
+# ---------------------------
+st.markdown("""
+<style>
+
+.stApp {
+    background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+    color: white;
+}
+
+h1,h2,h3,label {
+    color: #f0f0f0 !important;
+}
+
+input {
+    background-color: #1f2c34 !important;
+    color: white !important;
+    border-radius: 8px !important;
+    border: 1px solid #555 !important;
+}
+
+div[data-baseweb="select"] {
+    background-color: #1f2c34 !important;
+    border-radius: 8px !important;
+}
+
+.stButton>button {
+    background-color: #00c9a7;
+    color: black;
+    border-radius: 10px;
+    height: 45px;
+    width: 200px;
+    font-weight: bold;
+}
+
+.stButton>button:hover {
+    background-color: #00e6c3;
+}
+
+.result-box {
+    padding:20px;
+    border-radius:10px;
+    font-size:20px;
+    text-align:center;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# ---------------------------
+# Load Model
+# ---------------------------
 model = pickle.load(open("logistic_model.pkl","rb"))
 scaler = pickle.load(open("scaler.pkl","rb"))
 
-st.title("Customer Churn Prediction")
+# ---------------------------
+# Title
+# ---------------------------
+st.title("📊 Customer Churn Prediction Dashboard")
+st.write("Predict whether a telecom customer is likely to churn.")
 
-st.write("Enter customer details")
-
+# ---------------------------
+# Input Layout
+# ---------------------------
 col1,col2,col3 = st.columns(3)
 
 with col1:
@@ -36,11 +100,14 @@ with col3:
     paperless = st.selectbox("Paperless Billing",["No","Yes"])
     payment = st.selectbox("Payment Method",
         ["Electronic check","Mailed check","Bank transfer","Credit card"])
-    tenure = st.number_input("Tenure",0,72)
-    monthly = st.number_input("Monthly Charges")
-    total = st.number_input("Total Charges")
 
-# Binary encoding
+    tenure = float(st.text_input("Tenure (months)", "12"))
+    monthly = float(st.text_input("Monthly Charges", "70"))
+    total = float(st.text_input("Total Charges", "1500"))
+
+# ---------------------------
+# Encoding
+# ---------------------------
 def encode(x):
     return 1 if x=="Yes" else 0
 
@@ -66,7 +133,10 @@ contract = contract_map[contract]
 internet = internet_map[internet]
 payment = payment_map[payment]
 
-if st.button("Predict"):
+# ---------------------------
+# Prediction
+# ---------------------------
+if st.button("Predict Churn"):
 
     features = np.array([[gender,senior,partner,dependents,
                           tenure,phone,multiline,internet,
@@ -79,9 +149,14 @@ if st.button("Predict"):
     prediction = model.predict(features_scaled)[0]
     probability = model.predict_proba(features_scaled)[0][1]
 
-    if prediction == 1:
-        st.error("Customer is likely to churn")
-    else:
-        st.success("Customer is not likely to churn")
+    st.markdown("---")
 
-    st.write("Churn Probability:", round(probability*100,2),"%")
+    if prediction == 1:
+        st.markdown(
+        f"<div class='result-box' style='background:#ff4b4b'>⚠️ Customer likely to churn<br><br>Risk: {round(probability*100,2)}%</div>",
+        unsafe_allow_html=True)
+
+    else:
+        st.markdown(
+        f"<div class='result-box' style='background:#00c897'>✅ Customer unlikely to churn<br><br>Risk: {round(probability*100,2)}%</div>",
+        unsafe_allow_html=True)
