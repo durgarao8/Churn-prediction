@@ -2,133 +2,86 @@ import streamlit as st
 import numpy as np
 import pickle
 
-# -----------------------------
-# Page Config
-# -----------------------------
-st.set_page_config(
-    page_title="Customer Churn Prediction",
-    page_icon="📊",
-    layout="wide"
-)
+st.set_page_config(page_title="Churn Prediction", layout="wide")
 
-# -----------------------------
-# Load Model and Scaler
-# -----------------------------
-model = pickle.load(open("logistic_model.pkl", "rb"))
-scaler = pickle.load(open("scaler.pkl", "rb"))
+# Load model
+model = pickle.load(open("logistic_model.pkl","rb"))
+scaler = pickle.load(open("scaler.pkl","rb"))
 
-# -----------------------------
-# Title
-# -----------------------------
-st.title("📊 Customer Churn Prediction Dashboard")
-st.write("Predict whether a customer will churn using Machine Learning.")
+st.title("Customer Churn Prediction")
 
-# -----------------------------
-# Sidebar
-# -----------------------------
-st.sidebar.header("About This App")
-st.sidebar.write("""
-This application predicts **customer churn** using a trained **Logistic Regression model**.
+st.write("Enter customer details")
 
-Steps:
-1. Enter customer details
-2. Click Predict
-3. View churn probability
-""")
-
-# -----------------------------
-# Input Section
-# -----------------------------
-st.subheader("Customer Information")
-
-col1, col2, col3 = st.columns(3)
+col1,col2,col3 = st.columns(3)
 
 with col1:
-    gender = st.selectbox("Gender", ["Male", "Female"])
-    senior = st.selectbox("Senior Citizen", ["No", "Yes"])
-    partner = st.selectbox("Partner", ["No", "Yes"])
-    dependents = st.selectbox("Dependents", ["No", "Yes"])
+    gender = st.selectbox("Gender",["Male","Female"])
+    senior = st.selectbox("Senior Citizen",["No","Yes"])
+    partner = st.selectbox("Partner",["No","Yes"])
+    dependents = st.selectbox("Dependents",["No","Yes"])
+    phone = st.selectbox("Phone Service",["No","Yes"])
+    multiline = st.selectbox("Multiple Lines",["No","Yes"])
 
 with col2:
-    tenure = st.number_input("Tenure (months)", 0, 72)
-    monthly_charges = st.number_input("Monthly Charges", 0.0, 200.0)
-    total_charges = st.number_input("Total Charges", 0.0, 10000.0)
+    internet = st.selectbox("Internet Service",["DSL","Fiber optic","No"])
+    security = st.selectbox("Online Security",["No","Yes"])
+    backup = st.selectbox("Online Backup",["No","Yes"])
+    device = st.selectbox("Device Protection",["No","Yes"])
+    support = st.selectbox("Tech Support",["No","Yes"])
+    tv = st.selectbox("Streaming TV",["No","Yes"])
+    movies = st.selectbox("Streaming Movies",["No","Yes"])
 
 with col3:
-    contract = st.selectbox("Contract Type",
-                            ["Month-to-month", "One year", "Two year"])
-
-    internet = st.selectbox("Internet Service",
-                            ["DSL", "Fiber optic", "No"])
-
+    contract = st.selectbox("Contract",["Month-to-month","One year","Two year"])
+    paperless = st.selectbox("Paperless Billing",["No","Yes"])
     payment = st.selectbox("Payment Method",
-                           ["Electronic check",
-                            "Mailed check",
-                            "Bank transfer",
-                            "Credit card"])
+        ["Electronic check","Mailed check","Bank transfer","Credit card"])
+    tenure = st.number_input("Tenure",0,72)
+    monthly = st.number_input("Monthly Charges")
+    total = st.number_input("Total Charges")
 
-# -----------------------------
-# Encode Inputs
-# -----------------------------
-gender = 1 if gender == "Male" else 0
-senior = 1 if senior == "Yes" else 0
-partner = 1 if partner == "Yes" else 0
-dependents = 1 if dependents == "Yes" else 0
+# Binary encoding
+def encode(x):
+    return 1 if x=="Yes" else 0
 
-contract_map = {
-    "Month-to-month": 0,
-    "One year": 1,
-    "Two year": 2
-}
+gender = 1 if gender=="Male" else 0
+senior = encode(senior)
+partner = encode(partner)
+dependents = encode(dependents)
+phone = encode(phone)
+multiline = encode(multiline)
+security = encode(security)
+backup = encode(backup)
+device = encode(device)
+support = encode(support)
+tv = encode(tv)
+movies = encode(movies)
+paperless = encode(paperless)
 
-internet_map = {
-    "DSL": 0,
-    "Fiber optic": 1,
-    "No": 2
-}
-
-payment_map = {
-    "Electronic check": 0,
-    "Mailed check": 1,
-    "Bank transfer": 2,
-    "Credit card": 3
-}
+contract_map = {"Month-to-month":0,"One year":1,"Two year":2}
+internet_map = {"DSL":0,"Fiber optic":1,"No":2}
+payment_map = {"Electronic check":0,"Mailed check":1,"Bank transfer":2,"Credit card":3}
 
 contract = contract_map[contract]
 internet = internet_map[internet]
 payment = payment_map[payment]
 
-# -----------------------------
-# Prediction
-# -----------------------------
-if st.button("Predict Churn"):
+if st.button("Predict"):
 
-    features = np.array([[gender, senior, partner, dependents,
-                          tenure, monthly_charges, total_charges,
-                          contract, internet, payment]])
+    features = np.array([[gender,senior,partner,dependents,
+                          tenure,phone,multiline,internet,
+                          security,backup,device,support,
+                          tv,movies,contract,paperless,
+                          payment,monthly,total]])
 
     features_scaled = scaler.transform(features)
 
     prediction = model.predict(features_scaled)[0]
     probability = model.predict_proba(features_scaled)[0][1]
 
-    st.subheader("Prediction Result")
-
     if prediction == 1:
-        st.error("⚠️ Customer is likely to churn")
+        st.error("Customer is likely to churn")
     else:
-        st.success("✅ Customer is not likely to churn")
+        st.success("Customer is not likely to churn")
 
-    st.subheader("Churn Probability")
-
-    prob_percent = int(probability * 100)
-
-    st.metric("Churn Risk", f"{prob_percent}%")
-
-    st.progress(prob_percent)
-
-# -----------------------------
-# Footer
-# -----------------------------
-st.markdown("---")
-st.write("Machine Learning Churn Prediction App built with Streamlit")
+    st.write("Churn Probability:", round(probability*100,2),"%")
